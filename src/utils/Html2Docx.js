@@ -18,24 +18,7 @@ export class Html2Docx {
     this.styleMap = option.styleMap;
     const dom = new DOMParser().parseFromString(html, 'text/html');
     this.domList = [...dom.body.children];
-  }
-  /**
-   * 当有模板传入时初始化样式 暂停方案
-   */
-  initStyle() {
-    const styles = {};
-    if (this.styleMap && '标题' in this.styleMap) {
-      styles['M_Title'] = this.getTemplateStyle(this.styleMap['标题']);
-    }
-    if (this.styleMap && '正文' in this.styleMap) {
-      styles['M_Text'] = this.getTemplateStyle(this.styleMap['正文']);
-      styles['M_H2'] = this.getTemplateStyle(this.styleMap['正文']);
-      styles['M_H3'] = this.getTemplateStyle(this.styleMap['正文']);
-      styles['M_H4'] = this.getTemplateStyle(this.styleMap['正文']);
-      styles['M_H5'] = this.getTemplateStyle(this.styleMap['正文']);
-      styles['M_H6'] = this.getTemplateStyle(this.styleMap['正文']);
-    }
-    return styles;
+    this.initDefaultStyle();
   }
   /**
    * 根据dom 实时生成样式:用在内部生成样式
@@ -112,58 +95,79 @@ export class Html2Docx {
 
     return resultStyle;
   }
+  initDefaultStyle() {
+    const copy = JSON.parse(JSON.stringify(TIP_TAP_STYLE));
+    for (let key in copy) {
+      if (key === 'H1') {
+        if (this.styleMap && '标题' in this.styleMap) {
+          copy[key] = this.getTemplateStyle(this.styleMap['标题'], key);
+        } else {
+          continue;
+        }
+      } else {
+        copy[key] = this.getTemplateStyle(this.styleMap['正文'], key);
+      }
+    }
+    this.defaultStyle = copy;
+  }
   /**
    * 统一样式，匹配 TipTap 中的样式
    * @param {Object} tempStyle 模板样式，优先使用
    * @param {Object} defaultStyle dom 样式 当无模板样式时使用
    * @returns {{run:Object,paragraph:Object}} 样式对象
    */
-  getTemplateStyle(tempStyle, defaultStyle) {
-    return {
-      run: {
-        color: tempStyle.color || defaultStyle.color,
-        size:
-          parseInt(tempStyle.fontSize?.match(/\d+/)[0], 10) * 2 ||
-          defaultStyle.size,
-        bold: tempStyle.fontWeight === 'bold',
-        font: {
-          name: tempStyle.fontFamily,
-        },
-      },
-      paragraph: {
-        alignment: tempStyle.textAlign,
-        indent: {
-          start: tempStyle.textIndent,
-        },
-      },
-    };
-  }
-
-  parseTitle(dom) {
-    //优先模板样式 覆盖dom样式
-    if (this.styleMap && '标题' in this.styleMap) {
-      return new Paragraph({
-        text: dom.innerText,
-        heading: 'Title',
-      });
+  getTemplateStyle(tempStyle, tag) {
+    const resultStyle = TIP_TAP_STYLE[tag];
+    // 首先获取模板样式
+    for (const key in tempStyle) {
+      if (Object.prototype.hasOwnProperty.call(tempStyle, key)) {
+        switch (key) {
+          case 'fontSize':
+            resultStyle['run']['size'] = parseInt(tempStyle[key]) * 2;
+            break;
+          case 'color':
+            resultStyle['run']['color'] = tempStyle[key];
+            break;
+          case 'fontWeight':
+            resultStyle['run']['bold'] = tempStyle[key] === 'bold';
+            break;
+          case 'fontFamily':
+            resultStyle['run']['font'] = {
+              name: tempStyle[key],
+            };
+            break;
+          case 'textAlign':
+            resultStyle['paragraph']['alignment'] = tempStyle[key];
+            break;
+          case 'textIndent':
+            resultStyle['paragraph']['indent'] = {
+              start: tempStyle[key],
+            };
+            break;
+        }
+      }
     }
+    return resultStyle;
+  }
+  parseTitle(dom) {
+    return new Paragraph({
+      text: dom.innerText,
+      heading: 'Title',
+    });
   }
   parseHTag(dom) {
-    //优先模板样式 覆盖dom样式
-    if (this.styleMap && '正文' in this.styleMap) {
-      return new Paragraph({
-        text: dom.innerText,
-        heading: 'Heading' + dom.tagName.slice(1),
-      });
-    }
+    const tag = dom.tagName;
+    return new Paragraph({
+      text: dom.innerText,
+      heading: 'Heading' + dom.tagName.slice(1),
+    });
   }
   parsePTag(dom) {
-    if ('正文' in this.styleMap) {
-      return new Paragraph({
-        text: dom.innerText,
-      });
-    }
+    return new Paragraph({
+      text: dom.innerText,
+    });
   }
+  parseOlTag(dom) {}
   /**
    * 解析DOM元素
    * 此函数旨在根据DOM元素的类型进行特定处理当前只处理H1元素
@@ -193,14 +197,14 @@ export class Html2Docx {
       ],
       styles: {
         default: {
-          document: TIP_TAP_STYLE.p,
-          title: TIP_TAP_STYLE.h1,
-          heading1: TIP_TAP_STYLE.h1,
-          heading2: TIP_TAP_STYLE.h2,
-          heading3: TIP_TAP_STYLE.h3,
-          heading4: TIP_TAP_STYLE.h4,
-          heading5: TIP_TAP_STYLE.h5,
-          heading6: TIP_TAP_STYLE.h6,
+          document: this.defaultStyle.P,
+          title: this.defaultStyle.H1,
+          heading1: this.defaultStyle.H1,
+          heading2: this.defaultStyle.H2,
+          heading3: this.defaultStyle.H3,
+          heading4: this.defaultStyle.H4,
+          heading5: this.defaultStyle.H5,
+          heading6: this.defaultStyle.H6,
         },
       },
     });
