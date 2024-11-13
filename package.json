@@ -1,0 +1,27 @@
+{
+  "name": "fun-ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "package": "vue-cli-service build --target lib ./src/package/index.js --name fun-ui --dest fun-ui"
+  },
+  "dependencies": {
+    "core-js": "^3.8.3",
+    "docx": "^9.0.3",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "vue-template-compiler": "^2.6.14"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
