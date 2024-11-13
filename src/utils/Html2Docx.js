@@ -1,8 +1,13 @@
 /*
  * @Description:
+ * @Date: 2024-11-12 10:08:18
+ */
+/*
+ * @Description:
  * @Date: 2024-11-11 13:33:53
  */
 import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { TIP_TAP_STYLE } from './tipTapStyle.js';
 export class Html2Docx {
   constructor(html, option) {
     if (!html) throw new Error('html is required');
@@ -14,196 +19,148 @@ export class Html2Docx {
     const dom = new DOMParser().parseFromString(html, 'text/html');
     this.domList = [...dom.body.children];
   }
-  // 引入模板时会先初始化样式，无模板时采用自身Dom样式
-  // initStyle() {
-  //   if (this.styleMap && '标题' in this.styleMap) {
-  //     const style = this.styleMap['标题'];
-  //     this.heading1Style = {
-  //       run: {
-  //         color: style.color,
-  //         size: parseInt(style.fontSize?.match(/\d+/)[0], 10) * 2,
-  //         bold: style.fontWeight === 'bold',
-  //         font: {
-  //           name: style.fontFamily,
-  //         },
-  //       },
-  //       paragraph: {
-  //         alignment: style.textAlign,
-  //         indent: {
-  //           start: style.textIndent,
-  //         },
-  //       },
-  //     };
-  //   }
-  //   if (this.styleMap && '正文' in this.styleMap) {
-  //     const style = this.styleMap['正文'];
-  //     this.contentStyle = {
-  //       run: {
-  //         color: style.color,
-  //         size: parseInt(style.fontSize?.match(/\d+/)[0], 10) * 2,
-  //         bold: style.fontWeight === 'bold',
-  //         font: {
-  //           name: style.fontFamily,
-  //         },
-  //       },
-  //       paragraph: {
-  //         alignment: style.textAlign,
-  //         indent: {
-  //           start: style.textIndent,
-  //         },
-  //       },
-  //     };
-  //     this.heading = {
-  //       run: {
-  //         color: style.color,
-  //         size: parseInt(style.fontSize?.match(/\d+/)[0], 10) * 2,
-  //         bold: style.fontWeight === 'bold',
-  //         font: {
-  //           name: style.fontFamily,
-  //         },
-  //       },
-  //       alignment: 'start',
-  //       indent: {
-  //         start: style.textIndent,
-  //       },
-  //     };
-  //   }
-  // }
-  parseTitle(dom) {
-    let style = {};
-    const domStyle = dom.getAttribute('style');
-    console.log(domStyle);
-    if (domStyle) {
-      Object.assign(style, {
-        run: {
-          color: domStyle.color,
-          size: parseInt(domStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: domStyle.fontWeight === 'bold',
-          font: {
-            name: domStyle.fontFamily,
-          },
-        },
-        alignment: domStyle.textAlign,
-        indent: {
-          start: domStyle.textIndent,
-        },
-      });
+  /**
+   * 当有模板传入时初始化样式 暂停方案
+   */
+  initStyle() {
+    const styles = {};
+    if (this.styleMap && '标题' in this.styleMap) {
+      styles['M_Title'] = this.getTemplateStyle(this.styleMap['标题']);
     }
+    if (this.styleMap && '正文' in this.styleMap) {
+      styles['M_Text'] = this.getTemplateStyle(this.styleMap['正文']);
+      styles['M_H2'] = this.getTemplateStyle(this.styleMap['正文']);
+      styles['M_H3'] = this.getTemplateStyle(this.styleMap['正文']);
+      styles['M_H4'] = this.getTemplateStyle(this.styleMap['正文']);
+      styles['M_H5'] = this.getTemplateStyle(this.styleMap['正文']);
+      styles['M_H6'] = this.getTemplateStyle(this.styleMap['正文']);
+    }
+    return styles;
+  }
+  /**
+   * 根据dom 实时生成样式:用在内部生成样式
+   * @param {Object} tempStyle 模板样式，优先使用
+   * @param {Object} domStyle dom 样式 当无模板样式时使用
+   * @returns {{run:Object,paragraph:Object}} 样式对象
+   */
+  getStyle(tempStyle, domStyle) {
+    const resultStyle = {};
+    // 首先获取模板样式
+    for (const key in tempStyle) {
+      if (Object.prototype.hasOwnProperty.call(tempStyle, key)) {
+        switch (key) {
+          case 'fontSize':
+            resultStyle['run']['size'] = parseInt(tempStyle[key]) * 2;
+            break;
+          case 'color':
+            resultStyle['run']['color'] = tempStyle[key];
+            break;
+          case 'fontWeight':
+            resultStyle['run']['bold'] = tempStyle[fontWeight] === 'bold';
+            break;
+          case 'fontFamily':
+            resultStyle['run']['font'] = {
+              name: tempStyle[key],
+            };
+            break;
+          case 'textAlign':
+            resultStyle['paragraph']['alignment'] = tempStyle[key];
+            break;
+          case 'textIndent':
+            resultStyle['paragraph']['indent'] = {
+              start: tempStyle[key],
+            };
+            break;
+        }
+      }
+    }
+    // 获取dom样式
+    for (const key in domStyle) {
+      if (Object.prototype.hasOwnProperty.call(domStyle, key)) {
+        switch (key) {
+          case 'fontSize':
+            resultStyle['run']['size'] =
+              resultStyle['run']['size'] || parseInt(domStyle[key]) * 2;
+            break;
+          case 'color':
+            resultStyle['run']['color'] =
+              resultStyle['run']['color'] || domStyle[key];
+            break;
+          case 'fontWeight':
+            resultStyle['run']['bold'] =
+              resultStyle['run']['bold'] || domStyle[key] === 'bold';
+            break;
+          case 'fontFamily':
+            resultStyle['run']['font'] = resultStyle['run']['font'] || {
+              name: domStyle[key],
+            };
+            break;
+          case 'textAlign':
+            resultStyle['paragraph']['alignment'] =
+              resultStyle['paragraph']['alignment'] || domStyle[key];
+            break;
+          case 'textIndent':
+            resultStyle['paragraph']['indent'] = resultStyle['paragraph'][
+              'indent'
+            ] || {
+              start: domStyle[key],
+            };
+            break;
+        }
+      }
+    }
+
+    return resultStyle;
+  }
+  /**
+   * 统一样式，匹配 TipTap 中的样式
+   * @param {Object} tempStyle 模板样式，优先使用
+   * @param {Object} defaultStyle dom 样式 当无模板样式时使用
+   * @returns {{run:Object,paragraph:Object}} 样式对象
+   */
+  getTemplateStyle(tempStyle, defaultStyle) {
+    return {
+      run: {
+        color: tempStyle.color || defaultStyle.color,
+        size:
+          parseInt(tempStyle.fontSize?.match(/\d+/)[0], 10) * 2 ||
+          defaultStyle.size,
+        bold: tempStyle.fontWeight === 'bold',
+        font: {
+          name: tempStyle.fontFamily,
+        },
+      },
+      paragraph: {
+        alignment: tempStyle.textAlign,
+        indent: {
+          start: tempStyle.textIndent,
+        },
+      },
+    };
+  }
+
+  parseTitle(dom) {
     //优先模板样式 覆盖dom样式
     if (this.styleMap && '标题' in this.styleMap) {
-      const tempStyle = this.styleMap['标题'];
-      Object.assign(style, {
-        run: {
-          ...style.run,
-          color: tempStyle.color,
-          size: parseInt(tempStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: tempStyle.fontWeight === 'bold',
-          font: {
-            name: tempStyle.fontFamily,
-          },
-        },
-        alignment: tempStyle.textAlign,
-        indent: {
-          start: tempStyle.textIndent,
-        },
-      });
-    }
-    return new Paragraph({
-      text: dom.innerText,
-      ...style,
-    });
-  }
-  parseH(dom) {
-    let style = {};
-    const domStyle = dom.getAttribute('style');
-    console.log(domStyle);
-    if (domStyle) {
-      style = {
-        run: {
-          color: domStyle.color,
-          size: parseInt(domStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: domStyle.fontWeight === 'bold',
-          font: {
-            name: domStyle.fontFamily,
-          },
-        },
-        alignment: domStyle.textAlign,
-        indent: {
-          start: domStyle.textIndent,
-        },
-      };
-    }
-    //优先模板样式 覆盖dom样式
-    if (this.styleMap && '正文' in this.styleMap) {
-      const tempStyle = this.styleMap['正文'];
-      style = {
-        ...style,
-        run: {
-          ...style.run,
-          color: tempStyle.color,
-          size: parseInt(tempStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: tempStyle.fontWeight === 'bold',
-          font: {
-            name: tempStyle.fontFamily,
-          },
-        },
-        alignment: tempStyle.textAlign,
-        indent: {
-          start: tempStyle.textIndent,
-        },
-      };
-    }
-    if ('正文' in this.styleMap) {
       return new Paragraph({
         text: dom.innerText,
-        ...style,
+        heading: 'Title',
       });
     }
   }
-  parseP(dom) {
-    let style = {};
-    const domStyle = dom.getAttribute('style');
-    console.log(domStyle);
-    if (domStyle) {
-      style = {
-        run: {
-          color: domStyle.color,
-          size: parseInt(domStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: domStyle.fontWeight === 'bold',
-          font: {
-            name: domStyle.fontFamily,
-          },
-        },
-        alignment: domStyle.textAlign,
-        indent: {
-          start: domStyle.textIndent,
-        },
-      };
-    }
+  parseHTag(dom) {
     //优先模板样式 覆盖dom样式
     if (this.styleMap && '正文' in this.styleMap) {
-      const tempStyle = this.styleMap['正文'];
-      style = {
-        ...style,
-        run: {
-          ...style.run,
-          color: tempStyle.color,
-          size: parseInt(tempStyle.fontSize?.match(/\d+/)[0], 10) * 2,
-          bold: tempStyle.fontWeight === 'bold',
-          font: {
-            name: tempStyle.fontFamily,
-          },
-        },
-        alignment: tempStyle.textAlign,
-        indent: {
-          start: tempStyle.textIndent,
-        },
-      };
+      return new Paragraph({
+        text: dom.innerText,
+        heading: 'Heading' + dom.tagName.slice(1),
+      });
     }
+  }
+  parsePTag(dom) {
     if ('正文' in this.styleMap) {
       return new Paragraph({
         text: dom.innerText,
-        ...style,
       });
     }
   }
@@ -217,9 +174,9 @@ export class Html2Docx {
     if (dom.nodeName === 'H1') {
       return this.parseTitle(dom);
     } else if (/^H[2-6]$/i.test(dom.nodeName)) {
-      return this.parseH(dom);
+      return this.parseHTag(dom);
     } else {
-      return this.parseP(dom);
+      return this.parsePTag(dom);
     }
   }
   // 导出DocxBlob
@@ -229,11 +186,28 @@ export class Html2Docx {
       children.push(this.parseDom(dom));
     });
     const doc = new Document({
-      sections: [],
+      sections: [
+        {
+          children: [...children],
+        },
+      ],
+      styles: {
+        default: {
+          document: TIP_TAP_STYLE.p,
+          title: TIP_TAP_STYLE.h1,
+          heading1: TIP_TAP_STYLE.h1,
+          heading2: TIP_TAP_STYLE.h2,
+          heading3: TIP_TAP_STYLE.h3,
+          heading4: TIP_TAP_STYLE.h4,
+          heading5: TIP_TAP_STYLE.h5,
+          heading6: TIP_TAP_STYLE.h6,
+        },
+      },
     });
-    doc.addSection({
-      children: [...children],
-    });
+
+    // doc.addSection({
+    //   children: [...children],
+    // });
     console.log(doc.Styles);
 
     return await Packer.toBlob(doc);
