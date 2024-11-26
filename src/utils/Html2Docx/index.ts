@@ -2,7 +2,7 @@
  * @Description: 将 html 转换为 docx.js 配置项
  * @Date: 2024-11-11 13:33:53
  */
-import { Document, Packer, Paragraph, TextRun, } from 'docx';
+import { Document, Packer, Paragraph, TextRun, LevelFormat, convertInchesToTwip, AlignmentType } from 'docx';
 import { TIP_TAP_STYLE } from './tipTapStyle';
 import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions } from './Html2Docx.type';
 export class Html2Docx {
@@ -18,6 +18,7 @@ export class Html2Docx {
     this.styleMap = option.styleMap;
     const dom = new DOMParser().parseFromString(html, 'text/html');
     this.domList = Array.from(dom.body.children) as HTMLElement[];
+    console.log(this.domList);
     this.initDefaultStyle();
   }
   initDefaultStyle() {
@@ -94,37 +95,100 @@ export class Html2Docx {
       heading: ('Heading' + dom.tagName.slice(1)) as (typeof HeadingLevel)[keyof typeof HeadingLevel],
     });
   }
+  parseOlTag(dom: HTMLElement, level: number = 0): Paragraph[] {
+    const children = Array.from(dom.children) as HTMLElement[];
+    console.log(children);
+    let paragraphList: Paragraph[] = [];
+    for (const element of children) {
+      if (element.nodeName === 'OL') {
+        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1))
+          ;
+      } else if (element.nodeName === 'UL') {
+        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1))
+      } else if (element.nodeName === 'LI') {
+        const text = element.innerText;
+        paragraphList.push(new Paragraph({
+          text,
+          numbering: {
+            reference: "my-crazy-numbering",
+            level,
+          }
+        }))
+      }
+    }
+    return paragraphList
+  }
   parsePTag(dom: HTMLElement) {
     return new Paragraph({
       text: dom.innerText,
     });
   }
-  parseOlTag(dom: HTMLElement) { }
+
   /**
    * 解析DOM元素
    * 此函数旨在根据DOM元素的类型进行特定处理当前只处理H1元素
-   * @param {HTMLElement} dom - 需要解析的DOM元素
+   * @param {HTMLElement[]} domList - 需要解析的DOM元素
    */
-  parseDom(dom: HTMLElement) {
-    // 检查DOM元素是否为H1标签
-    if (dom.nodeName === 'H1') {
-      return this.parseTitle(dom);
-    } else if (/^H[2-6]$/i.test(dom.nodeName)) {
-      return this.parseHTag(dom);
-    } else {
-      return this.parsePTag(dom);
-    }
+  parseDomList(domList: HTMLElement[]) {
+    let children: Paragraph[] = [];
+    domList.forEach((dom) => {
+      // 检查DOM元素是否为H1标签
+      if (dom.nodeName === 'H1') {
+        children.push(this.parseTitle(dom));
+      } else if (/^H[2-6]$/i.test(dom.nodeName)) {
+        children.push(this.parseHTag(dom));
+      } else if (dom.nodeName === 'OL') {
+        children = children.concat(this.parseOlTag(dom))
+      } else {
+        children.push(this.parsePTag(dom))
+      }
+    });
+    console.log(children);
+    return children
+
   }
   // 导出DocxBlob
   async exportDocx() {
-    const children: Paragraph[] = [];
-    this.domList.forEach((dom) => {
-      children.push(this.parseDom(dom));
-    });
     const doc = new Document({
+      numbering: {
+        config: [
+          {
+            reference: "my-crazy-numbering",
+            levels: [
+              {
+                level: 0,
+                format: LevelFormat.DECIMAL,
+                text: "%1.",
+                alignment: AlignmentType.START,
+                style: {
+                  paragraph: {
+                    indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.18) },
+                  },
+                },
+              },
+            ],
+          },
+          {
+            reference: "my-unique-bullet-points",
+            levels: [
+              {
+                level: 0,
+                format: LevelFormat.BULLET,
+                text: "\u1F60",
+                alignment: AlignmentType.LEFT,
+                style: {
+                  paragraph: {
+                    indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) },
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
       sections: [
         {
-          children: [...children],
+          children: this.parseDomList(this.domList),
         },
       ],
       styles: {

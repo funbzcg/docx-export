@@ -119,6 +119,24 @@ const TIP_TAP_STYLE: TipTapStyleType = {
       },
     },
   },
+  LI: {
+    run: {
+      color: '#000000',
+      size: 2 * 12,
+      bold: false,
+      font: '宋体',
+    },
+    paragraph: {
+      alignment: 'left',
+      indent: {
+        left: 200, //不起效果
+      },
+      spacing: {
+        before: 200 * 1.32,
+        line: 200 * 1.5,
+      },
+    },
+  }
 };
 
 export { TIP_TAP_STYLE };
