@@ -44,7 +44,8 @@ export type AlignmentTypeString = (typeof AlignmentType)[keyof typeof AlignmentT
 /** @description:  段落样式*/
 interface ParagraphStyleInterface {
   alignment: AlignmentTypeString;
-  spacing: ISpacingProperties
+  spacing: ISpacingProperties;
+  indent: Object;
 }
 /** @description:  交由docx接收的样式 */
 export interface ResultStyleInterface {

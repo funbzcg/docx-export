@@ -3,8 +3,8 @@
  * @Date: 2024-11-11 13:33:53
  */
 import { Document, Packer, Paragraph, TextRun, } from 'docx';
-import { TIP_TAP_STYLE } from './tipTapStyle.ts';
-import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions } from './Html2Docx.type.ts';
+import { TIP_TAP_STYLE } from './tipTapStyle';
+import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions } from './Html2Docx.type';
 export class Html2Docx {
   html: string;
   domList: HTMLElement[];
@@ -17,7 +17,7 @@ export class Html2Docx {
     this.html = html;
     this.styleMap = option.styleMap;
     const dom = new DOMParser().parseFromString(html, 'text/html');
-    this.domList = [...dom.body.children] as HTMLElement[];
+    this.domList = Array.from(dom.body.children) as HTMLElement[];
     this.initDefaultStyle();
   }
   initDefaultStyle() {

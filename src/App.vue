@@ -12,7 +12,7 @@
 </template>
 <script setup lang="js">
 import { onBeforeMount, ref } from 'vue';
-import { Html2Docx } from '@/utils/Html2Docx';
+import { Html2Docx } from '@/utils/Html2Docx/index.ts';
 import { openDocxAsZip, getBookmarkStyleMap } from '@/utils/readDocx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';

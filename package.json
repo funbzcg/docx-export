@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:docs": "tsc src/utils/html2docx/index.ts --outDir dist/utils"
   },
   "dependencies": {
     "vue": "^3.4.31",
