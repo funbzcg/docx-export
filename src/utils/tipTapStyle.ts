@@ -1,16 +1,17 @@
 // TipTap 一些基础样式 待完善
+
+import { TipTapStyleType } from "./Html2Docx.type";
+
 /**
  * @description: TipTap 样式 数字样式在导出的docx中会少一半，因此这里统一*2
  */
-const TIP_TAP_STYLE = {
+const TIP_TAP_STYLE: TipTapStyleType = {
   H1: {
     run: {
       color: '#000000',
       size: 2 * 22,
       bold: true,
-      font: {
-        name: '宋体',
-      },
+      font: '宋体',
     },
     paragraph: {
       alignment: 'center',
@@ -25,15 +26,11 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 16,
       bold: true,
-      font: {
-        name: '宋体',
-      },
+      font: '宋体',
     },
     paragraph: {
       alignment: 'left',
-      indent: {
-        start: 0,
-      },
+
       spacing: {
         before: 200 * 1.32,
         line: 200 * 1.75,
@@ -45,15 +42,11 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 12,
       bold: true,
-      font: {
-        name: '宋体',
-      },
+      font: '宋体',
     },
     paragraph: {
       alignment: 'left',
-      indent: {
-        start: 0,
-      },
+
       spacing: {
         before: 200 * 1.32,
         line: 200 * 1.75,
@@ -65,15 +58,11 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 12,
       bold: true,
-      font: {
-        name: '黑体',
-      },
+      font: '黑体',
     },
     paragraph: {
       alignment: 'left',
-      indent: {
-        start: 0,
-      },
+
       spacing: {
         before: 200 * 1.32,
         line: 200 * 1.55,
@@ -85,15 +74,11 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 12,
       bold: true,
-      font: {
-        name: '宋体',
-      },
+      font: '宋体',
     },
     paragraph: {
       alignment: 'left',
-      indent: {
-        start: 0,
-      },
+
       spacing: {
         before: 200 * 1.32,
         line: 200 * 1.55,
@@ -105,15 +90,11 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 12,
       bold: true,
-      font: {
-        name: '黑体',
-      },
+      font: '黑体',
     },
     paragraph: {
       alignment: 'left',
-      indent: {
-        start: 0,
-      },
+
       spacing: {
         before: 200 * 1.32,
         line: 200 * 1.32,
@@ -125,9 +106,7 @@ const TIP_TAP_STYLE = {
       color: '#000000',
       size: 2 * 12,
       bold: false,
-      font: {
-        name: '宋体',
-      },
+      font: '宋体',
     },
     paragraph: {
       alignment: 'left',
