@@ -1,5 +1,5 @@
 /*
- * @Description:
+ * @Description: 将 html 转换为 docx.js 配置项
  * @Date: 2024-11-11 13:33:53
  */
 import { Document, Packer, Paragraph, TextRun, } from 'docx';

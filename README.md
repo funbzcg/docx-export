@@ -1,5 +1,10 @@
-# Vue 3 + TypeScript + Vite
+<!--
+ * @Description:
+ * @Date: 2024-11-22 14:42:40
+-->
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+# 当前进度
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+1. 将 TipTap 的默认标题样式转换为 docx.js 的配置样式
+   - 1.1. 添加标题样式
+   - 1.2. 添加正文样式
