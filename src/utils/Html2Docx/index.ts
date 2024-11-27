@@ -4,12 +4,14 @@
  */
 import { Document, Packer, Paragraph, TextRun, LevelFormat, convertInchesToTwip, AlignmentType } from 'docx';
 import { TIP_TAP_STYLE } from './tipTapStyle';
-import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions } from './Html2Docx.type';
+import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions, ISectionOptions } from './Html2Docx.type';
 export class Html2Docx {
   html: string;
   domList: HTMLElement[];
   styleMap: OptionInterface['styleMap'];
   defaultStyle: TipTapStyleType | undefined;
+  numberingConfig: any[];
+  listIndex: number = 0;
   constructor(html: string, option: OptionInterface) {
     if (!html) throw new Error('html is required');
     if (!option) throw new Error('option is required');
@@ -18,8 +20,23 @@ export class Html2Docx {
     this.styleMap = option.styleMap;
     const dom = new DOMParser().parseFromString(html, 'text/html');
     this.domList = Array.from(dom.body.children) as HTMLElement[];
-    console.log(this.domList);
     this.initDefaultStyle();
+    this.numberingConfig = [{
+      reference: "unique",
+      levels: [
+        {
+          level: 0,
+          format: LevelFormat.BULLET,
+          text: "\u1F60",
+          alignment: AlignmentType.LEFT,
+          style: {
+            paragraph: {
+              indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) },
+            },
+          },
+        },
+      ],
+    },]
   }
   initDefaultStyle() {
     const copy = deepCopy<TipTapStyleType>(TIP_TAP_STYLE);
@@ -95,22 +112,57 @@ export class Html2Docx {
       heading: ('Heading' + dom.tagName.slice(1)) as (typeof HeadingLevel)[keyof typeof HeadingLevel],
     });
   }
+  /**
+   * 
+   * @param dom ol 列表dom
+   * @param level { number } 层级，当出现嵌套列表时，level 会自动加 1
+   * @returns {Paragraph}
+   */
   parseOlTag(dom: HTMLElement, level: number = 0): Paragraph[] {
+    this.listIndex++
+    //通过 判断索引奇偶性 区分 reference
     const children = Array.from(dom.children) as HTMLElement[];
-    console.log(children);
+    this.addNumbering(this.listIndex);
     let paragraphList: Paragraph[] = [];
     for (const element of children) {
       if (element.nodeName === 'OL') {
-        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1))
-          ;
+        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1));
       } else if (element.nodeName === 'UL') {
-        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1))
+        paragraphList = paragraphList.concat(this.parseUlTag(element, level + 1))
       } else if (element.nodeName === 'LI') {
         const text = element.innerText;
         paragraphList.push(new Paragraph({
           text,
           numbering: {
-            reference: "my-crazy-numbering",
+            reference: "number" + this.listIndex,
+            level,
+          }
+        }))
+      }
+    }
+    return paragraphList
+  }
+  /**
+ * 
+ * @param dom ol 列表dom
+ * @param level { number } 层级，当出现嵌套列表时，level 会自动加 1
+ * @returns {Paragraph}
+ */
+  parseUlTag(dom: HTMLElement, level: number = 0): Paragraph[] {
+    //通过 判断索引奇偶性 区分 reference
+    const children = Array.from(dom.children) as HTMLElement[];
+    let paragraphList: Paragraph[] = [];
+    for (const element of children) {
+      if (element.nodeName === 'OL') {
+        paragraphList = paragraphList.concat(this.parseOlTag(element, level + 1));
+      } else if (element.nodeName === 'UL') {
+        paragraphList = paragraphList.concat(this.parseUlTag(element, level + 1))
+      } else if (element.nodeName === 'LI') {
+        const text = element.innerText;
+        paragraphList.push(new Paragraph({
+          text,
+          numbering: {
+            reference: "unique",
             level,
           }
         }))
@@ -129,68 +181,60 @@ export class Html2Docx {
    * 此函数旨在根据DOM元素的类型进行特定处理当前只处理H1元素
    * @param {HTMLElement[]} domList - 需要解析的DOM元素
    */
-  parseDomList(domList: HTMLElement[]) {
-    let children: Paragraph[] = [];
-    domList.forEach((dom) => {
+  parseDomList(domList: HTMLElement[]): ISectionOptions[] {
+    // selection docx 的单页，默认不主动分页；需要分页时，selections push 个 {children:[]} index =+ 1
+    let selections: { children: Paragraph[] }[] = [{ children: [] }];
+    let index = 0;
+    // 相同 reference 的列表 序列号会一直延续，需要人为中断一下
+    for (const dom of domList) {
       // 检查DOM元素是否为H1标签
       if (dom.nodeName === 'H1') {
-        children.push(this.parseTitle(dom));
+        selections[index].children.push(this.parseTitle(dom));
       } else if (/^H[2-6]$/i.test(dom.nodeName)) {
-        children.push(this.parseHTag(dom));
+        selections[index].children.push(this.parseHTag(dom));
       } else if (dom.nodeName === 'OL') {
-        children = children.concat(this.parseOlTag(dom))
+        selections[index].children = selections[index].children.concat(this.parseOlTag(dom));
+      } else if (dom.nodeName === 'UL') {
+        selections[index].children = selections[index].children.concat(this.parseUlTag(dom));
       } else {
-        children.push(this.parsePTag(dom))
+        selections[index].children.push(this.parsePTag(dom));
       }
-    });
-    console.log(children);
-    return children
-
+    }
+    console.log(selections);
+    return selections
   }
+  /**
+ * @description 相同 reference 的数字序列号会延续，因此出现了几个数字列表就需要几个reference
+ * @param {number} index - 列表数量，默认为1
+ */
+  addNumbering(index: number) {
+    this.numberingConfig.push({
+      reference: "number" + index,
+      levels: [
+        {
+          level: 0,
+          format: LevelFormat.DECIMAL,
+          text: "%1.",
+          alignment: AlignmentType.START,
+          start: 1,
+          style: {
+            paragraph: {
+              indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.18) },
+            },
+          },
+        },
+      ],
+    })
+  }
+
+
   // 导出DocxBlob
   async exportDocx() {
     const doc = new Document({
       numbering: {
-        config: [
-          {
-            reference: "my-crazy-numbering",
-            levels: [
-              {
-                level: 0,
-                format: LevelFormat.DECIMAL,
-                text: "%1.",
-                alignment: AlignmentType.START,
-                style: {
-                  paragraph: {
-                    indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.18) },
-                  },
-                },
-              },
-            ],
-          },
-          {
-            reference: "my-unique-bullet-points",
-            levels: [
-              {
-                level: 0,
-                format: LevelFormat.BULLET,
-                text: "\u1F60",
-                alignment: AlignmentType.LEFT,
-                style: {
-                  paragraph: {
-                    indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) },
-                  },
-                },
-              },
-            ],
-          },
-        ],
+        config: this.numberingConfig
       },
-      sections: [
-        {
-          children: this.parseDomList(this.domList),
-        },
-      ],
+      sections: this.parseDomList(this.domList),
       styles: {
         default: {
           document: this.defaultStyle!.P as IBaseParagraphStyleOptions,

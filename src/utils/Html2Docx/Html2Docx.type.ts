@@ -2,7 +2,7 @@
  * @Description: 类型
  * @Date: 2024-11-22 15:07:16
  */
-import { AlignmentType, IIndentAttributesProperties, ISpacingProperties, HeadingLevel, IBaseParagraphStyleOptions } from 'docx'
+import { AlignmentType, ISectionOptions, ISpacingProperties, HeadingLevel, IBaseParagraphStyleOptions, Paragraph } from 'docx'
 
 export type TagName = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'P' | 'OL' | 'UL' | 'LI' | 'BR' | 'A' | 'IMG' | 'TABLE' | 'TR' | 'TD' | 'TH' | 'B' | 'I' | 'U' | 'STRONG' | 'EM' | 'CODE' | 'PRE';
 
@@ -53,8 +53,10 @@ export interface ResultStyleInterface {
   paragraph?: Partial<ParagraphStyleInterface>
 }
 
+
+
 export type TipTapStyleType = Partial<Record<TagName, ResultStyleInterface>>;
 
-export { AlignmentType, HeadingLevel, }
+export { HeadingLevel, }
 
-export type { IBaseParagraphStyleOptions }
+export type { IBaseParagraphStyleOptions, ISectionOptions }
