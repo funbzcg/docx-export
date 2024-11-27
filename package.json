@@ -10,10 +10,11 @@
     "build:docs": "tsc src/utils/html2docx/index.ts --outDir dist/utils"
   },
   "dependencies": {
-    "vue": "^3.4.31",
+    "@hufe921/canvas-editor": "^0.9.97",
     "docx": "^9.0.3",
     "file-saver": "^2.0.5",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "vue": "^3.4.31"
   },
   "devDependencies": {
     "@types/node": "^22.9.1",

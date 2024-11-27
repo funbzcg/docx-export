@@ -8,6 +8,7 @@
     <input type="file" @input="handleFileUpload" />
     <br />
     <button v-if="show" @click="exportDocx">导出docx</button>
+    <CanvasEditor :value="html"></CanvasEditor>
   </div>
 </template>
 <script setup lang="js">
@@ -16,6 +17,7 @@ import { Html2Docx } from '@/utils/Html2Docx/index.ts';
 import { openDocxAsZip, getBookmarkStyleMap } from '@/utils/readDocx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
+import CanvasEditor from './components/CanvasEditor.vue';
 const jsZip = new JSZip();
 
 const html =
@@ -40,4 +42,4 @@ const handleFileUpload = async (event) => {
   show.value = true;
 };
 </script>
-<style lang="less" scoped></style>
+<style scoped></style>
