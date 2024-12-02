@@ -32,7 +32,7 @@ const exportDocx = async () => {
     xmlMap: xmlMap,
     styleMap: styleMap,
   });
-  console.log(o);
+
   const blob = await o.exportDocx();
   saveAs(blob, 'test.docx');
 };

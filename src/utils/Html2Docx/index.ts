@@ -1,10 +1,11 @@
 /*
- * @Description: 将 html 转换为 docx.js 配置项
+ * @Description: 将 html 转换为 docx.js 配置项 接受的pt(镑) 或者 px 应换算为 twip(缇) 
  * @Date: 2024-11-11 13:33:53
  */
-import { Document, Packer, Paragraph, TextRun, LevelFormat, convertInchesToTwip, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, LevelFormat, convertInchesToTwip, AlignmentType } from 'docx';
 import { TIP_TAP_STYLE } from './tipTapStyle';
 import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, HeadingLevel, ResultStyleInterface, AlignmentTypeString, IBaseParagraphStyleOptions, ISectionOptions } from './Html2Docx.type';
+
 export class Html2Docx {
   html: string;
   domList: HTMLElement[];

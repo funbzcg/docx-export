@@ -1,6 +1,7 @@
 // TipTap 一些基础样式 待完善
 
 import { TipTapStyleType } from "./Html2Docx.type";
+import { convertPtToTwip, } from "./utils";
 
 /**
  * @description: TipTap 样式 数字样式在导出的docx中会少一半，因此这里统一*2
@@ -9,7 +10,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H1: {
     run: {
       color: '#000000',
-      size: 2 * 22,
+      size: convertPtToTwip(22),
       bold: true,
       font: '宋体',
     },
@@ -24,7 +25,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H2: {
     run: {
       color: '#000000',
-      size: 2 * 16,
+      size: convertPtToTwip(16),
       bold: true,
       font: '宋体',
     },
@@ -40,7 +41,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H3: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: true,
       font: '宋体',
     },
@@ -56,7 +57,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H4: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: true,
       font: '黑体',
     },
@@ -72,7 +73,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H5: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: true,
       font: '宋体',
     },
@@ -88,7 +89,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   H6: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: true,
       font: '黑体',
     },
@@ -104,7 +105,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   P: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: false,
       font: '宋体',
     },
@@ -122,7 +123,7 @@ const TIP_TAP_STYLE: TipTapStyleType = {
   LI: {
     run: {
       color: '#000000',
-      size: 2 * 12,
+      size: convertPtToTwip(12),
       bold: false,
       font: '宋体',
     },

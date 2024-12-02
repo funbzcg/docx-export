@@ -1,5 +1,5 @@
 <!--
-* @Description  canvas编辑器
+* @Description  canvas 编辑器
 * @FileName  CanvasEditor
 * @Date 2024-11-27 16:30:52
 !-->
