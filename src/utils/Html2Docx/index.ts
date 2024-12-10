@@ -9,19 +9,16 @@ import type { OptionInterface, StyleMapInterface, TagName, TipTapStyleType, Head
 export class Html2Docx {
   html: string;
   domList: HTMLElement[];
-  styleMap: OptionInterface['styleMap'];
+  styleMap: OptionInterface['styleMap'] | undefined = undefined;
   defaultStyle: TipTapStyleType | undefined;
   numberingConfig: any[];
   listIndex: number = 0;
   constructor(html: string, option: OptionInterface) {
     if (!html) throw new Error('html is required');
-    if (!option) throw new Error('option is required');
-    if (!option.styleMap) throw new Error('styleMap is required');
-    this.html = html;
     this.styleMap = option.styleMap;
+    this.html = html;
     const dom = new DOMParser().parseFromString(html, 'text/html');
     this.domList = Array.from(dom.body.children) as HTMLElement[];
-    this.initDefaultStyle();
     this.numberingConfig = [{
       reference: "unique",
       levels: [
@@ -40,7 +37,11 @@ export class Html2Docx {
     },]
   }
   initDefaultStyle() {
+    /** 执行该函数时 this.styleMap 不为null */
     const copy = deepCopy<TipTapStyleType>(TIP_TAP_STYLE);
+    if (!this.styleMap) {
+      return copy
+    }
     for (let key in copy) {
       if (key === 'H1') {
         if (this.styleMap && '标题' in this.styleMap) {
@@ -49,7 +50,7 @@ export class Html2Docx {
           continue;
         }
       } else {
-        copy[key as TagName] = this.getTemplateStyle(this.styleMap['正文'] as StyleMapInterface, key as TagName);
+        copy[key as TagName] = this.getTemplateStyle(this.styleMap!['正文'] as StyleMapInterface, key as TagName);
       }
     }
     this.defaultStyle = copy;
@@ -101,13 +102,19 @@ export class Html2Docx {
     return resultStyle as ResultStyleInterface;
   }
   parseTitle(dom: HTMLElement) {
+    if (dom.children.length) {
+      const lineDomList = Array.from(dom.children) as HTMLElement[];
+      return new Paragraph({
+        heading: 'Title',
+        // children: [this.parseLineDomList(lineDomList)]
+      })
+    }
     return new Paragraph({
       text: dom.innerText,
       heading: 'Title',
     });
   }
   parseHTag(dom: HTMLElement) {
-    const tag = dom.tagName;
     return new Paragraph({
       text: dom.innerText,
       heading: ('Heading' + dom.tagName.slice(1)) as (typeof HeadingLevel)[keyof typeof HeadingLevel],
@@ -183,10 +190,11 @@ export class Html2Docx {
    * @param {HTMLElement[]} domList - 需要解析的DOM元素
    */
   parseDomList(domList: HTMLElement[]): ISectionOptions[] {
+    console.log(domList);
+
     // selection docx 的单页，默认不主动分页；需要分页时，selections push 个 {children:[]} index =+ 1
     let selections: { children: Paragraph[] }[] = [{ children: [] }];
     let index = 0;
-    // 相同 reference 的列表 序列号会一直延续，需要人为中断一下
     for (const dom of domList) {
       // 检查DOM元素是否为H1标签
       if (dom.nodeName === 'H1') {
@@ -201,7 +209,6 @@ export class Html2Docx {
         selections[index].children.push(this.parsePTag(dom));
       }
     }
-    console.log(selections);
     return selections
   }
   /**
@@ -231,6 +238,7 @@ export class Html2Docx {
 
   // 导出DocxBlob
   async exportDocx() {
+
     const doc = new Document({
       numbering: {
         config: this.numberingConfig
@@ -249,11 +257,6 @@ export class Html2Docx {
         },
       },
     });
-
-    // doc.addSection({
-    //   children: [...children],
-    // });
-    console.log(doc.Styles);
 
     return await Packer.toBlob(doc);
   }

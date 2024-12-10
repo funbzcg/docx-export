@@ -21,6 +21,13 @@ export interface StyleMapInterface {
   [key: string]: string;
 }
 
+export interface TipTapJson {
+  type: string;
+  marks?: any[];
+  attrs?: any;
+  content: TipTapJson[];
+  text?: string;
+}
 
 enum StyleMapKeyType {
   Title = '标题',
